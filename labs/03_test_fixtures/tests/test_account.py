@@ -29,6 +29,7 @@ class TestAccountModel(TestCase):
     def setUp(self):
         """Truncate the tables"""
         db.session.query(Account).delete()
+        db.session.commit()
 
     def tearDown(self):
         """Remove the session"""
