@@ -1,14 +1,10 @@
 """
 Test Cases TestAccountModel
 """
-import json
-from random import randrange
 from unittest import TestCase
 from models import db
 from models.account import Account, DataValidationError
 from factories import AccountFactory
-
-ACCOUNT_DATA = {}
 
 class TestAccountModel(TestCase):
     """Test Account Model"""
@@ -17,10 +13,7 @@ class TestAccountModel(TestCase):
     def setUpClass(cls):
         """ Load data needed by tests """
         db.create_all()  # make our sqlalchemy tables
-        global ACCOUNT_DATA
-        with open('tests/fixtures/account_data.json') as json_data:
-            ACCOUNT_DATA = json.load(json_data)
-
+       
     @classmethod
     def tearDownClass(cls):
         """Disconnext from database"""
@@ -28,7 +21,6 @@ class TestAccountModel(TestCase):
 
     def setUp(self):
         """Truncate the tables"""
-        self.rand = randrange(0, len(ACCOUNT_DATA))
         db.session.query(Account).delete()
         db.session.commit()
 
@@ -42,15 +34,14 @@ class TestAccountModel(TestCase):
 
     def test_create_all_accounts(self):
         """ Test creating multiple Accounts """
-        for data in ACCOUNT_DATA:
-            account = Account(**data)
+        for _ in range(10):
+            account = AccountFactory()
             account.create()
-        self.assertEqual(len(Account.all()), len(ACCOUNT_DATA))
+        self.assertEqual(len(Account.all()), 10)
 
     def test_create_an_account(self):
         """ Test Account creation using known data """
-        data = ACCOUNT_DATA[self.rand] # get a random account
-        account = Account(**data)
+        account = AccountFactory()
         account.create()
         self.assertEqual(len(Account.all()), 1)
 
@@ -62,8 +53,8 @@ class TestAccountModel(TestCase):
 
     def test_to_dict(self):
         """ Test account to dict """
-        data = ACCOUNT_DATA[self.rand] # get a random account
-        account = Account(**data)
+        # get a random account
+        account = AccountFactory()
         result = account.to_dict()
         self.assertEqual(account.name, result["name"])
         self.assertEqual(account.email, result["email"])
@@ -73,8 +64,9 @@ class TestAccountModel(TestCase):
 
     def test_from_dict(self):
         """ Test account from dict """
-        data = ACCOUNT_DATA[self.rand] # get a random account
-        account = Account()
+        # get a random account
+        account = AccountFactory()
+        data = account.to_dict()
         account.from_dict(data)
         self.assertEqual(account.name, data["name"])
         self.assertEqual(account.email, data["email"])
@@ -83,8 +75,8 @@ class TestAccountModel(TestCase):
 
     def test_update_an_account(self):
         """ Test Account update using known data """
-        data = ACCOUNT_DATA[self.rand] # get a random account
-        account = Account(**data)
+        # get a random account
+        account = AccountFactory()
         account.create()
         self.assertIsNotNone(account.id)
         account.name = "Rumpelstiltskin"
@@ -94,15 +86,15 @@ class TestAccountModel(TestCase):
 
     def test_invalid_id_on_update(self):
         """ Test invalid ID update """
-        data = ACCOUNT_DATA[self.rand] # get a random account
-        account = Account(**data)
+         # get a random account
+        account = AccountFactory()
         account.id = None
         self.assertRaises(DataValidationError, account.update)
 
     def test_delete_an_account(self):
         """ Test Account delete using known data """
-        data = ACCOUNT_DATA[self.rand] # get a random account
-        account = Account(**data)
+        # get a random account
+        account = AccountFactory()
         account.create()
         self.assertEqual(len(Account.all()), 1)
         account.delete()
